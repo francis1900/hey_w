@@ -9,20 +9,20 @@ jobs:
     timeout-minutes: 360
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Enable Protocol
         run: |
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name 'fDenyTSConnections' -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-          net user runneradmin MyP@ssw0rd123
+          net user runneradmin MyP@ssw0rd123 
 
-      - name: Install OpenSSH
-        shell: powershell
-        run: |
-          choco install -y openssh
-          & "C:\Program Files\OpenSSH-Win64\install-sshd.ps1"
-          Start-Service sshd
+      - name: Install OpenVPN via Chocolatey
+        run: choco install openvpn -y
 
-      - name: Start Tunnel
-        shell: cmd
+      - name: Configure OpenVPN
         run: |
-          "C:\Program Files\OpenSSH-Win64\ssh.exe" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -R 0:localhost:3389 serveo.net
+          $configPath = "$env:GITHUB_WORKSPACE\open.ovpn"
+          Write-Host "Connecting with config at $configPath"
+          & "C:\Program Files\OpenVPN\bin\openvpn.exe" --config "$configPath"
