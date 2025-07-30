@@ -1,0 +1,38 @@
+name: Debug with tmate
+
+on: workflow_dispatch
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  
+
+    steps:
+      - name: Install tmate
+        run: |
+          sudo apt update
+          sudo apt install -y tmate
+
+      - name: Start tmate session and wait
+        run: |
+          # Create a unique socket file
+          TMATE_SOCKET="/tmp/tmate.sock"
+
+          # Start a detached tmate session with the custom socket
+          tmate -S $TMATE_SOCKET new-session -d
+
+          # Wait until tmate is ready
+          tmate -S $TMATE_SOCKET wait tmate-ready
+
+          # Show connection info
+          echo "SSH session:"
+          tmate -S $TMATE_SOCKET display -p '#{tmate_ssh}'
+          echo "SSH (read-only):"
+          tmate -S $TMATE_SOCKET display -p '#{tmate_ssh_ro}'
+          echo "Web URL:"
+          tmate -S $TMATE_SOCKET display -p '#{tmate_web}'
+          echo "Web (read-only):"
+          tmate -S $TMATE_SOCKET display -p '#{tmate_web_ro}'
+
+          # Keep the job alive for 6 hours
+          sleep 21600
